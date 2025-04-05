@@ -2,62 +2,79 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 // user schema
-const userSchema = new mongoose.Schema({
-  profilePhoto: {
-    type: Object,
-    url: String,
-    public_id: String,
-    required: false,
+const userSchema = new mongoose.Schema(
+  {
+    profilePhoto: {
+      type: Object,
+      url: String,
+      public_id: String,
+      required: false,
+    },
+    firstName: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    lastName: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      trim: true,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    // rememberMe: {
+    //   type: Boolean,
+    //   required: false,
+    //   default: false,
+    // },
+    officeAddress: {
+      type: String,
+      required: false,
+    },
+    isVerified: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    roleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: true,
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
+    // role: {
+    //   type: String,
+    //   require: true,
+    //   default: "Patient",
+    //   enum: [
+    //     "Admin",
+    //     "Patient",
+    //     "General Physician",
+    //     "Audit Manager",
+    //     "Doctor",
+    //     "Port Agent",
+    //     "Coordinator",
+    //   ],
+    // },
   },
-  fullName: {
-    type: String,
-    trim: true,
-    required: true,
-  },
-  phoneNumber: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  email: {
-    type: String,
-    trim: true,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  // rememberMe: {
-  //   type: Boolean,
-  //   required: false,
-  //   default: false,
-  // },
-  officeAddress: {
-    type: String,
-    required: false,
-  },
-  isVerified: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-  role: {
-    type: String,
-    require: true,
-    default: "Patient",
-    enum: [
-      "Admin",
-      "Patient",
-      "General Physician",
-      "Audit Manager",
-      "Doctor",
-      "Port Agent",
-      "Coordinator",
-    ],
-  },
-});
+  { timestamps: true }
+);
 
 // bcrypt and save the password
 userSchema.pre("save", async function (next) {

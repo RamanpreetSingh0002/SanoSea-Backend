@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const { isValidObjectId } = require("mongoose");
 
+const bcrypt = require("bcrypt");
+
+const Role = require("../models/role.js");
 const User = require("../models/user");
 const {
   sendError,
@@ -15,33 +18,44 @@ const {
 const emailVerificationToken = require("../models/emailVerificationToken");
 const passwordResetToken = require("../models/passwordResetToken");
 
-// create user
+// * create user
 exports.signUp = async (req, res) => {
-  const { fullName, phoneNumber, email, password, officeAddress } = req.body;
+  const { firstName, lastName, phoneNumber, email, password, officeAddress } =
+    req.body;
   const { file } = req;
 
-  const oldUser = await User.findOne({ email });
-  if (oldUser) return sendError(res, "This email already in use!");
+  // Check if the email already exists
+  const oldUserEmail = await User.findOne({ email });
+  if (oldUserEmail) return sendError(res, "This email is already in use!");
 
+  // Check if the phone number already exists
+  const oldUserPhone = await User.findOne({ phoneNumber });
+  if (oldUserPhone)
+    return sendError(res, "This phone number is already in use!");
+
+  // Create a new user object
   const newUser = new User({
-    fullName,
+    firstName,
+    lastName,
     phoneNumber,
     email,
     password,
     officeAddress,
   });
 
+  // Handle profile photo upload
   if (file) {
     const { url, public_id } = await uploadImageToCloud(file.path);
     newUser.profilePhoto = { url, public_id };
   }
 
+  // Save the new user in the database
   await newUser.save();
 
-  // generate 6 digit OTP
+  // Generate a 6-digit OTP
   let OTP = generateOTP();
 
-  // store OTP inside our DB
+  // Store OTP inside the database
   const newEmailVerificationToken = new emailVerificationToken({
     owner: newUser._id,
     token: OTP,
@@ -49,11 +63,10 @@ exports.signUp = async (req, res) => {
 
   await newEmailVerificationToken.save();
 
-  // * send that OTP to out user
-  // var transport = mailTransporter();
-  var transport = generateMailTransporter();
+  // Send the OTP to the user's email
+  // const transport = mailTransporter();
+  const transport = generateMailTransporter();
 
-  // * sending email verification OTP to mail
   transport.sendMail({
     from: "verification@reviewapp.com",
     to: newUser.email,
@@ -68,7 +81,8 @@ exports.signUp = async (req, res) => {
     user: {
       id: newUser._id,
       profilePhoto: newUser?.profilePhoto?.url,
-      fullName: newUser.fullName,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
       phoneNumber: newUser.phoneNumber,
       email: newUser.email,
       password: newUser.password,
@@ -121,7 +135,8 @@ exports.verifyEmail = async (req, res) => {
     user: {
       id: user._id,
       profilePhoto: user?.profilePhoto?.url,
-      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
       phoneNumber: user.phoneNumber,
       email: user.email,
       password: user.password,
@@ -304,18 +319,28 @@ exports.resetPassword = async (req, res) => {
 exports.signIn = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).populate("roleId");
+
   if (!user) return sendError(res, "Invalid login credentials!", 404);
 
   const matched = await user.comparePassword(password);
+
   if (!matched) return sendError(res, "Invalid login credentials!", 404);
 
   // const { _id, name, role, isVerified } = user;
-  const { _id, fullName, phoneNumber, role } = user;
+  const { _id, firstName, lastName, phoneNumber, roleId } = user;
 
   const jwtToken = jwt.sign({ userId: _id }, process.env.JWT_SECRET);
   res.json({
-    user: { id: _id, fullName, phoneNumber, email, role, token: jwtToken },
+    user: {
+      id: _id,
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+      role: roleId?.name,
+      token: jwtToken,
+    },
     // user: { id: _id, name, email, role, token: jwtToken },
   });
 };

@@ -11,12 +11,13 @@ const {
 const { uploadImage } = require("../middlewares/multer");
 const { isAuth } = require("../middlewares/auth");
 const { isValidPassResetToken } = require("../middlewares/user");
+const { signInValidator, validate } = require("../middlewares/validator");
 
 const usersRouter = express.Router();
 
 // making different users Router
 usersRouter.post("/sign-up", uploadImage.single("profilePhoto"), signUp);
-usersRouter.post("/sign-in", signIn);
+usersRouter.post("/sign-in", signInValidator, validate, signIn);
 usersRouter.post("/verify-email", verifyEmail);
 usersRouter.post("/resend-email-verification-token", resendEmailVerification);
 usersRouter.post("/forget-password", forgetPassword);
