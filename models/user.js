@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema(
       public_id: String,
       required: false,
     },
+    fullName: {
+      type: String,
+      trim: true,
+      required: true,
+    },
     firstName: {
       type: String,
       trim: true,
@@ -18,7 +23,7 @@ const userSchema = new mongoose.Schema(
     lastName: {
       type: String,
       trim: true,
-      required: true,
+      required: false,
     },
     phoneNumber: {
       type: String,
@@ -53,6 +58,12 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
       required: true,
+      // default: async function () {
+      //   const patientRole = await mongoose
+      //     .model("Role")
+      //     .findOne({ name: "Patient" });
+      //   return patientRole?._id;
+      // },
     },
     lastLogin: {
       type: Date,
