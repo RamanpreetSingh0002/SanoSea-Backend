@@ -80,7 +80,7 @@ exports.signUp = async (req, res) => {
     const transport = generateMailTransporter();
 
     transport.sendMail({
-      from: "verification@reviewapp.com",
+      from: "verification@sanosea.com",
       to: newUser.email,
       subject: "Email Verification",
       html: `
