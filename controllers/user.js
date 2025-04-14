@@ -111,7 +111,7 @@ exports.signUp = async (req, res) => {
   }
 };
 
-// verify email
+// * verify email
 exports.verifyEmail = async (req, res) => {
   const { userId, OTP } = req.body;
 
@@ -173,7 +173,7 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-// resend email verification OTP
+// * resend email verification OTP
 exports.resendEmailVerification = async (req, res) => {
   const { userId } = req.body;
 
@@ -235,7 +235,7 @@ exports.resendEmailVerification = async (req, res) => {
   }
 };
 
-// forget password
+// * forget password
 exports.forgetPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -296,12 +296,12 @@ exports.forgetPassword = async (req, res) => {
   }
 };
 
-// reset password token(OTP)
+// * reset password token(OTP)
 exports.sendResetPasswordTokenStatus = (req, res) => {
   res.json({ valid: true });
 };
 
-// reset password
+// * reset password
 exports.resetPassword = async (req, res) => {
   const { newPassword, userId } = req.body;
 
@@ -329,7 +329,7 @@ exports.resetPassword = async (req, res) => {
       subject: "Password Reset Successfully",
       html: `
        <h1>Password Reset Successfully</h1>
-       <p'>Now you can use new password.</p>
+       <p>Now you can use new password.</p>
     `,
     });
 
@@ -347,6 +347,67 @@ exports.resetPassword = async (req, res) => {
 
     res.json({
       message: "Password reset successfully, now you can use new password.",
+    });
+  } catch (error) {
+    sendError(res, error.message, 500);
+  }
+};
+
+// * change password
+exports.changePassword = async (req, res) => {
+  const { email, oldPassword, newPassword, confirmPassword } = req.body;
+
+  try {
+    // Validate input fields
+    if (!email || !oldPassword || !newPassword || !confirmPassword) {
+      return sendError(res, "All fields are required!", 400);
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) return sendError(res, "User not found!", 404);
+
+    // Compare old password with stored password
+    const isMatched = await user.comparePassword(oldPassword);
+    if (!isMatched) return sendError(res, "Old password is incorrect!", 400);
+
+    // Ensure new password is different from the old one
+    if (oldPassword === newPassword) {
+      return sendError(
+        res,
+        "New password must be different from old password!",
+        400
+      );
+    }
+
+    // Ensure new password matches confirm password
+    if (newPassword !== confirmPassword) {
+      return sendError(
+        res,
+        "New password and confirm password do not match!",
+        400
+      );
+    }
+
+    // Hash and update new password
+    user.password = newPassword;
+    await user.save();
+
+    // Send confirmation email
+    const transport = generateMailTransporter();
+    transport.sendMail({
+      from: "security@sanosea.com",
+      to: user.email,
+      subject: "Password Changed Successfully",
+      html: `
+        <h1>Password Changed Successfully</h1>
+        <p>Your password has been updated successfully.</p>
+        <p>If you did not request this change, please contact support immediately.</p>
+      `,
+    });
+
+    res.json({
+      message: "Password changed successfully!",
     });
   } catch (error) {
     sendError(res, error.message, 500);
