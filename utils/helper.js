@@ -7,10 +7,18 @@ exports.sendError = (res, error, statusCode = 401) => {
 };
 
 // uploading image to cloud
-exports.uploadImageToCloud = async file => {
+exports.uploadImageToCloud = async (file, userId, userName) => {
+  const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`;
+
   const { secure_url: url, public_id } = await cloudinary.uploader.upload(
     file,
-    { gravity: "face", height: 500, width: 500, crop: "thumb" }
+    {
+      folder: folderName, // Store images in the user's folder
+      gravity: "face",
+      height: 500,
+      width: 500,
+      crop: "thumb",
+    }
   );
   return { url, public_id };
 };
