@@ -62,17 +62,17 @@ exports.create = async (req, res) => {
     });
 
     res.status(201).json({
-      user: {
-        id: newUser._id,
-        fullName: newUser.fullName,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        phoneNumber: newUser.phoneNumber,
-        password: newUser.password,
-        roleId: newUser.roleId,
-        roleName: role.name,
-      },
+      // user: {
+      //   id: newUser._id,
+      //   fullName: newUser.fullName,
+      //   firstName: newUser.firstName,
+      //   lastName: newUser.lastName,
+      //   email: newUser.email,
+      //   phoneNumber: newUser.phoneNumber,
+      //   password: newUser.password,
+      //   roleId: newUser.roleId,
+      //   roleName: role.name,
+      // },
       message:
         "Account Created Successfully! A temporary password has been sent to the user's email.",
     });
