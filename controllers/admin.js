@@ -12,8 +12,7 @@ const { generateMailTransporter } = require("../utils/mail.js");
 
 // * create route for sub admin
 exports.create = async (req, res) => {
-  const { firstName, lastName, email, phoneNumber, roleName, availability } =
-    req.body;
+  const { firstName, lastName, email, phoneNumber, roleName } = req.body;
   const { file } = req; // Capture uploaded file (only if Doctor)
   console.log(roleName);
 
@@ -64,7 +63,7 @@ exports.create = async (req, res) => {
       const doctorProfile = await Doctor.create({
         userId: newUser._id,
         licenseProof,
-        availability,
+        // availability,
       });
 
       // Attach Doctor Profile reference to the User
