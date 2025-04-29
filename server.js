@@ -5,6 +5,7 @@ const cors = require("cors");
 
 require("dotenv").config();
 require("./db/dbConnect.js");
+// require("events").EventEmitter.defaultMaxListeners = 20;
 
 const userRouter = require("./routes/user");
 const adminRouter = require("./routes/admin.js");
