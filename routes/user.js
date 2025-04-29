@@ -10,6 +10,7 @@ const {
   changePassword,
   uploadProfilePhoto,
   updateUser,
+  updateUserState,
 } = require("../controllers/user");
 const { uploadImage } = require("../middlewares/multer");
 const { isAuth } = require("../middlewares/auth");
@@ -61,6 +62,10 @@ usersRouter.post(
   uploadProfilePhoto
 );
 
-usersRouter.put("/:userId", isAuth, updateUser);
+// Update user profile
+usersRouter.put("/update-user/:userId", isAuth, updateUser);
+
+// Update user state (Active/Deactivate)
+usersRouter.put("/update-state/:userId", isAuth, updateUserState);
 
 module.exports = usersRouter;
