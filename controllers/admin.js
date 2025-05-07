@@ -1,21 +1,35 @@
 const Role = require("../models/role.js");
 const User = require("../models/user.js");
-const SubAdmin = require("../models/subAdmin.js");
 const Doctor = require("../models/doctor.js");
 
 const {
   sendError,
   generatePassword,
   uploadFileToCloud,
+  formatUser,
+  removeFolderFromCloud,
+  removeFileFromCloud,
 } = require("../utils/helper.js");
 const { generateMailTransporter } = require("../utils/mail.js");
 
 // * create route for sub admin
 exports.create = async (req, res) => {
-  const { firstName, lastName, email, phoneNumber, roleName } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    roleName,
+    doctorSpeciality,
+  } = req.body;
   const { file } = req; // Capture uploaded file (only if Doctor)
 
   try {
+    // Validate specialty for doctors
+    if (roleName === "Doctor" && !doctorSpeciality) {
+      return sendError(res, "Doctor specialty is required!");
+    }
+
     // Check for existing email
     const oldUserEmail = await User.findOne({ email });
     if (oldUserEmail) return sendError(res, "This email is already in use!");
@@ -47,19 +61,22 @@ exports.create = async (req, res) => {
 
     // If creating a Doctor profile, handle file upload & availability
     if (roleName === "Doctor") {
-      if (file.mimetype !== "application/pdf")
-        return sendError(res, "Only PDF format is allowed!");
+      if (file) {
+        if (file.mimetype !== "application/pdf")
+          return sendError(res, "Only PDF format is allowed!");
 
-      const { url, public_id } = await uploadFileToCloud(
-        file.path,
-        newUser._id,
-        newUser.fullName
-      );
-      licenseProof = { url, public_id };
+        const { url, public_id } = await uploadFileToCloud(
+          file.path,
+          newUser._id,
+          newUser.fullName
+        );
+        licenseProof = { url, public_id };
+      }
 
       // Create Doctor profile with availability
       const doctorProfile = await Doctor.create({
         userId: newUser._id,
+        doctorSpeciality,
         licenseProof,
         // availability,
       });
@@ -256,7 +273,7 @@ exports.getGeneralPhysician = async (req, res) => {
 
 // * get the list of all users by role
 exports.getUsersByRoles = async (req, res) => {
-  const { roles } = req.query; // Expecting roles as a comma-separated string in query (e.g., ?roles=Coordinator,Audit Manager)
+  const { roles, pageNo = 0, limit = 10, search } = req.query; // Expecting roles as a comma-separated string in query (e.g., ?roles=Coordinator,Audit Manager)
 
   try {
     if (!roles) {
@@ -264,10 +281,10 @@ exports.getUsersByRoles = async (req, res) => {
     }
 
     // Split roles into an array
-    const roleNames = roles.split(",");
+    const roleNames = roles.split(",").map(role => role.trim());
 
     // Fetch roles from the Role collection
-    const roleDocuments = await Role.find({ name: { $in: roleNames } });
+    const roleDocuments = await Role.find({ name: { $in: roleNames } }).lean(); // Use `.lean()` to reduce memory footprint
     if (roleDocuments.length === 0) {
       return sendError(res, "No matching roles found!", 404);
     }
@@ -275,22 +292,80 @@ exports.getUsersByRoles = async (req, res) => {
     // Extract role IDs
     const roleIds = roleDocuments.map(role => role._id);
 
+    // Build search query
+    let query = { roleId: { $in: roleIds } };
+
+    // If search exists, filter by name (case-insensitive)
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: `^${search}`, $options: "i" } },
+        { lastName: { $regex: `^${search}`, $options: "i" } },
+      ];
+    }
+
+    // Get total count of users matching the query
+    const totalUsers = await User.countDocuments(query);
+
     // Fetch users with the specified role IDs
-    const users = await User.find({ roleId: { $in: roleIds } }).populate(
-      "roleId"
-    );
+    const users = await User.find(query)
+      .populate("roleId")
+      .populate("doctorProfile") // Populate doctor profile if available
+      .select("-password") // Exclude password from results
+      .sort({ createdAt: -1 })
+      .skip(parseInt(pageNo) * parseInt(limit)) // Pagination
+      .limit(parseInt(limit)) // Limit results per page
+      .lean(); // Use `.lean()` to prevent excess memory usage
 
     if (!users || users.length === 0) {
-      return res.status(404).json({
-        message: `No users found for the specified roles: ${roleNames.join(
-          ", "
-        )}.`,
+      return res.status(200).json({
+        message: `No users found matching the query: ${
+          search || roleNames.join(", ")
+        }.`,
+        users: [], // Return an empty array
+        pagination: {
+          currentPage: parseInt(pageNo),
+          limit: parseInt(limit),
+          totalUsers: 0, // Indicate no matching records
+        },
       });
     }
 
     res.status(200).json({
       message: "Users fetched successfully!",
       users,
+      pagination: {
+        currentPage: parseInt(pageNo),
+        limit: parseInt(limit),
+        totalUsers,
+      },
+    });
+  } catch (error) {
+    sendError(res, error.message, 500);
+  }
+};
+
+// * get user details by ID
+exports.getUserById = async (req, res) => {
+  const { userId } = req.params; // Get userId from request parameters
+
+  try {
+    if (!userId) {
+      return sendError(res, "User ID is required!", 400);
+    }
+
+    // Fetch user details by ID
+    const user = await User.findById(userId)
+      .populate("roleId") // Populate role details
+      .select("-password") // Exclude password from results
+      .lean(); // Reduce memory usage with `.lean()`
+
+    if (!user) {
+      return sendError(res, "User not found!", 404);
+    }
+
+    res.status(200).json({
+      message: "User details fetched successfully!",
+      user: formatUser(user), // Format user details before sending
     });
   } catch (error) {
     sendError(res, error.message, 500);
@@ -303,17 +378,154 @@ exports.deleteUser = async (req, res) => {
 
   try {
     // Check if the user exists
-    const user = await User.findById(userId).populate("roleId"); // Fetch the role details along with the user
+    const user = await User.findById(userId).populate("roleId"); // Populate role details
     if (!user) return sendError(res, "User not found!", 404);
 
     // Store the user's role before deletion
-    const userRole = user.roleId.name;
+    const userRole = user?.roleId?.name;
+
+    // Remove Entire User Folder from Cloudinary (which removes all assets)
+    const isFolderDeleted = await removeFolderFromCloud(userId, user?.fullName);
+    if (!isFolderDeleted)
+      return sendError(res, "Could not remove user folder from Cloud!");
 
     // Delete the user from the database
     await User.findByIdAndDelete(userId);
 
     res.status(200).json({
-      message: `${userRole} has been deleted successfully!`,
+      message: `${userRole} has been deleted successfully, including all Cloudinary assets!`,
+    });
+  } catch (error) {
+    sendError(res, error.message, 500);
+  }
+};
+
+// * Update user state (Active/Deactivate)
+exports.updateUserState = async (req, res) => {
+  const { userId } = req.params;
+  const { state } = req.body;
+
+  try {
+    // Validate state value
+    if (!["Active", "Deactive"].includes(state)) {
+      return res.status(400).json({ error: "Invalid state value!" });
+    }
+
+    // Find and update user state
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { state },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found!" });
+    }
+
+    res.status(200).json({
+      message: `User state updated successfully to ${state}`,
+      user: updatedUser,
+    });
+  } catch (error) {
+    sendError(res, error.message, 500);
+  }
+};
+
+// * Update user profile
+exports.updateUser = async (req, res) => {
+  const { userId } = req.params;
+  const {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    roleName,
+    doctorSpeciality,
+  } = req.body;
+  const { file } = req; // Capture uploaded file (if updating Doctor's license)
+
+  try {
+    // Validate specialty for doctors
+    if (roleName === "Doctor" && !doctorSpeciality) {
+      return sendError(res, "Doctor specialty is required!");
+    }
+
+    // Check if the user exists
+    const user = await User.findById(userId).populate("roleId doctorProfile");
+    if (!user) return sendError(res, "User not found!", 404);
+
+    // Check for email uniqueness
+    if (email && email !== user.email) {
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) return sendError(res, "This email is already in use!");
+    }
+
+    // Check for phone number uniqueness
+    if (phoneNumber && phoneNumber !== user.phoneNumber) {
+      const existingPhone = await User.findOne({ phoneNumber });
+      if (existingPhone)
+        return sendError(res, "This phone number is already in use!");
+    }
+
+    // Update the user details
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (email) user.email = email;
+    if (phoneNumber) user.phoneNumber = phoneNumber;
+
+    // Update fullName dynamically before saving
+    user.fullName = user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.firstName;
+
+    // Update Role if changed
+    if (roleName && roleName !== user.roleId.name) {
+      const newRole = await Role.findOne({ name: roleName });
+      if (!newRole) return sendError(res, "Invalid role name provided!");
+      user.roleId = newRole._id;
+    }
+
+    // Ensure doctorProfile exists before updating doctorSpeciality
+    if (roleName === "Doctor") {
+      if (!user.doctorProfile) {
+        return sendError(res, "Doctor profile not found!");
+      }
+      user.doctorProfile.doctorSpeciality = doctorSpeciality;
+      await user.doctorProfile.save(); // Explicitly save doctorProfile
+    }
+
+    // Handle License Proof Update for Doctor
+    if (roleName === "Doctor" && file) {
+      if (file.mimetype !== "application/pdf") {
+        return sendError(res, "Only PDF format is allowed!");
+      }
+
+      // Remove previous license proof from Cloudinary if exists
+      if (user?.doctorProfile?.licenseProof?.public_id) {
+        const isFileDeleted = await removeFileFromCloud(
+          user?.doctorProfile?.licenseProof?.public_id
+        );
+
+        if (!isFileDeleted)
+          return sendError(res, "Could not remove user folder from Cloud!");
+      }
+
+      // Upload new license proof
+      const { url, public_id } = await uploadFileToCloud(
+        file.path,
+        user._id,
+        user.fullName
+      );
+      user.doctorProfile.licenseProof = { url, public_id };
+
+      await user.doctorProfile.save();
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: "User details updated successfully!",
+      user,
     });
   } catch (error) {
     sendError(res, error.message, 500);

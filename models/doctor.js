@@ -6,15 +6,22 @@ const doctorSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  doctorSpeciality: {
+    type: String,
+    required: true,
+  },
   licenseProof: {
     url: {
       type: String,
-      required: true,
+      required: false,
     },
     public_id: {
       type: String,
-      required: true,
+      required: false,
     },
+    // url: String,
+    // public_id: String,
+    // required: false,
   },
   availability: {
     days: [{ type: String, required: true }], // Example: ["Monday", "Wednesday"]

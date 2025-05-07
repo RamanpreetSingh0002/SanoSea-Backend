@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema(
     doctorProfile: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
-      default: null, // Attach Doctor Profile if user is a Doctor
+      default: null,
     },
     lastLogin: {
       type: Date,
@@ -65,9 +65,15 @@ const userSchema = new mongoose.Schema(
     },
     state: {
       type: String,
-      enum: ["Active", "Deactivate"],
+      enum: ["Active", "Deactive"],
       default: "Active",
     },
+    appointments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Appointment", // Each user can have multiple appointments
+      },
+    ],
   },
   { timestamps: true }
 );

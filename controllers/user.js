@@ -9,6 +9,7 @@ const {
   sendError,
   uploadImageToCloud,
   generateRandomByte,
+  removeImageFromCloud,
 } = require("../utils/helper");
 const {
   generateOTP,
@@ -425,7 +426,7 @@ exports.changePassword = async (req, res) => {
     transport.sendMail({
       from: "security@sanosea.com",
       to: user.email,
-      subject: "Your Password Has Been Changed Successfully",
+      subject: "Your Password Has Been Changed Successfully.",
       html: `
         <h2>Password Change Confirmation</h2>
         <p>Dear ${user.fullName},</p>
@@ -436,7 +437,8 @@ exports.changePassword = async (req, res) => {
     });
 
     res.json({
-      message: "Password changed successfully!",
+      message:
+        "Password changed successfully! Please log in again with your new password to continue.",
     });
   } catch (error) {
     sendError(res, error.message, 500);
@@ -495,7 +497,8 @@ exports.signIn = async (req, res) => {
 // * Upload Profile Photo
 exports.uploadProfilePhoto = async (req, res) => {
   const { file } = req;
-  const { userId } = req.userId; // Assuming user is authenticated and `userId` is available
+
+  const userId = req.user._id;
 
   try {
     if (!file) return sendError(res, "No file uploaded!");
@@ -503,6 +506,15 @@ exports.uploadProfilePhoto = async (req, res) => {
     // Find user details
     const user = await User.findById(userId);
     if (!user) return sendError(res, "User not found!", 404);
+
+    const publicId = user?.profilePhoto?.public_id;
+
+    // Delete previous profile photo from Cloudinary (if exists)
+    if (publicId) {
+      const isDeleted = await removeImageFromCloud(publicId);
+      if (!isDeleted)
+        return sendError(res, "Could not remove image from Cloud!");
+    }
 
     // Upload image to Cloudinary in the user's folder
     const { url, public_id } = await uploadImageToCloud(
@@ -554,6 +566,11 @@ exports.updateUser = async (req, res) => {
     if (phoneNumber) user.phoneNumber = phoneNumber;
     if (officeAddress) user.officeAddress = officeAddress;
 
+    // Update fullName dynamically before saving
+    user.fullName = user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.firstName;
+
     // Save the updated user details
     await user.save();
 
@@ -561,9 +578,7 @@ exports.updateUser = async (req, res) => {
       message: "User details updated successfully!",
       user: {
         id: user._id,
-        fullName: user.lastName
-          ? `${user.firstName} ${user.lastName}`
-          : user.firstName,
+        fullName: user.fullName,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
@@ -577,31 +592,31 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// * Update user state (Active/Deactivate)
-exports.updateUserState = async (req, res) => {
-  const { userId } = req.params;
-  const { state } = req.body;
+// * Get Patients by Name
+exports.getPatientsByName = async (req, res) => {
+  const { search } = req.query; // Extract search query from request
 
   try {
-    // Validate state value
-    if (!["Active", "Deactivate"].includes(state)) {
-      return res.status(400).json({ error: "Invalid state value!" });
+    // Fetch Role ID for "Patient"
+    const patientRole = await Role.findOne({ name: "Patient" });
+    if (!patientRole) return sendError(res, "Patient role not found!", 404);
+
+    // Build query to find patients by name (case-insensitive, starting match)
+    let query = { roleId: patientRole._id };
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: `^${search}`, $options: "i" } }, // Match starting name
+      ];
     }
 
-    // Find and update user state
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { state },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found!" });
-    }
+    // Fetch matching patients (excluding password for security)
+    const patients = await User.find(query)
+      .select("fullName email") // Only return name & email
+      .lean(); // Optimize memory usage
 
     res.status(200).json({
-      message: `User state updated successfully to ${state}`,
-      user: updatedUser,
+      message: "Patients fetched successfully!",
+      patients,
     });
   } catch (error) {
     sendError(res, error.message, 500);

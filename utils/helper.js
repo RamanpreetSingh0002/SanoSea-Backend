@@ -1,12 +1,13 @@
 const cloudinary = require("../cloud/index.js");
 const crypto = require("crypto");
+const role = require("../models/role.js");
 
-// send Error
+// * send Error
 exports.sendError = (res, error, statusCode = 401) => {
-  res.status(statusCode).json({ error });
+  res.status(statusCode).json({ error: error || "Internal Server Error" });
 };
 
-// uploading image to cloud
+// * uploading image to cloud
 exports.uploadImageToCloud = async (file, userId, userName) => {
   const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`;
 
@@ -23,7 +24,7 @@ exports.uploadImageToCloud = async (file, userId, userName) => {
   return { url, public_id };
 };
 
-// uploading file to cloud
+// * uploading file to cloud
 exports.uploadFileToCloud = async (file, userId, userName) => {
   // Generate a consistent folder name for the user
   const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`;
@@ -42,6 +43,67 @@ exports.uploadFileToCloud = async (file, userId, userName) => {
   } catch (error) {
     console.error("Cloudinary upload error:", error);
     throw new Error("File upload failed!");
+  }
+};
+
+// * This function deletes an image from Cloudinary using its public ID.
+exports.removeImageFromCloud = async publicId => {
+  try {
+    if (!publicId) return false; // No image provided
+
+    const { result } = await cloudinary.uploader.destroy(publicId);
+
+    return result === "ok"; // Returns `true` if deletion was successful
+  } catch (error) {
+    console.error("Error deleting image from Cloudinary:", error);
+    return false;
+  }
+};
+
+// * This function deletes a file from Cloudinary using its public ID.
+exports.removeFileFromCloud = async publicId => {
+  try {
+    if (!publicId) return false; // No file provided
+
+    const { result } = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "auto", // Allows all file types (PDF, images, etc.)
+    });
+
+    return result === "ok"; // Returns `true` if deletion was successful
+  } catch (error) {
+    console.error("Error deleting file from Cloudinary:", error);
+    return false;
+  }
+};
+
+// * This function deletes a folder from Cloudinary, including all its contents.
+exports.removeFolderFromCloud = async (userId, userName) => {
+  try {
+    const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`; // ✅ User-specific folder
+
+    // Step 1: Get all assets within the folder
+    const { resources } = await cloudinary.api.resources({
+      type: "upload",
+      prefix: folderName, // Finds all files within the folder
+    });
+
+    if (!resources.length) {
+      console.log(`No assets found in folder: ${folderName}`);
+      return true; // If no assets, folder doesn't exist—skip deletion
+    }
+
+    // Step 2: Delete all files individually before removing the folder
+    for (const resource of resources) {
+      await cloudinary.uploader.destroy(resource.public_id);
+    }
+
+    // Step 3: Delete the folder itself (only if empty)
+    await cloudinary.api.delete_folder(folderName);
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting folder from Cloudinary:", error);
+    return false;
   }
 };
 
@@ -80,4 +142,32 @@ exports.generatePassword = () => {
     .split("")
     .sort(() => Math.random() - 0.5)
     .join("");
+};
+
+// formatting user data to send to client
+exports.formatUser = user => {
+  const {
+    _id,
+    firstName,
+    lastName,
+    fullName,
+    email,
+    phoneNumber,
+    profilePhoto,
+    officeAddress,
+    roleId,
+    state,
+  } = user;
+  return {
+    _id,
+    firstName,
+    lastName,
+    fullName,
+    email,
+    phoneNumber,
+    profilePhoto: profilePhoto?.url,
+    officeAddress,
+    role: roleId?.name,
+    state,
+  };
 };

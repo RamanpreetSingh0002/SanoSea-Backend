@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuth, isAdmin } = require("../middlewares/auth");
+const { isAuth, isAdmin, isAdminOrSubAdmin } = require("../middlewares/auth");
 const {
   create,
   getSubAdmin,
@@ -9,7 +9,10 @@ const {
   getDoctors,
   getGeneralPhysician,
   getUsersByRoles,
+  getUserById,
   deleteUser,
+  updateUserState,
+  updateUser,
 } = require("../controllers/admin");
 const { uploadFile } = require("../middlewares/multer");
 
@@ -30,8 +33,24 @@ adminRouter.get("/patient-list", isAuth, getPatients);
 adminRouter.get("/doctors-list", isAuth, getDoctors);
 adminRouter.get("/general-physician-list", isAuth, getGeneralPhysician);
 
-adminRouter.get("/users-by-roles", isAuth, getUsersByRoles);
+adminRouter.get("/users-by-roles", isAuth, isAdminOrSubAdmin, getUsersByRoles);
+adminRouter.get("/user/:userId", isAuth, isAdminOrSubAdmin, getUserById);
 
-adminRouter.delete("/users/:userId", isAuth, deleteUser);
+adminRouter.delete("/user/:userId", isAuth, isAdminOrSubAdmin, deleteUser);
+adminRouter.put(
+  "/user/:userId",
+  isAuth,
+  isAdminOrSubAdmin,
+  uploadFile.single("licenseProof"),
+  updateUser
+);
+
+// Update user state (Active/Deactivate)
+adminRouter.put(
+  "/update-state/:userId",
+  isAuth,
+  isAdminOrSubAdmin,
+  updateUserState
+);
 
 module.exports = adminRouter;

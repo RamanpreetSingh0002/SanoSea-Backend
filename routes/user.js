@@ -10,7 +10,7 @@ const {
   changePassword,
   uploadProfilePhoto,
   updateUser,
-  updateUserState,
+  getPatientsByName,
 } = require("../controllers/user");
 const { uploadImage } = require("../middlewares/multer");
 const { isAuth } = require("../middlewares/auth");
@@ -45,8 +45,10 @@ usersRouter.get("/is-auth", isAuth, (req, res) => {
   res.json({
     user: {
       id: user._id,
-      profilePhoto: user?.profilePhoto?.url,
+      profilePhoto: user?.profilePhoto,
       fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
       phoneNumber: user.phoneNumber,
       email: user.email,
       officeAddress: user?.officeAddress,
@@ -58,14 +60,13 @@ usersRouter.get("/is-auth", isAuth, (req, res) => {
 
 usersRouter.post(
   "/upload-profile-photo",
+  isAuth,
   uploadImage.single("profilePhoto"),
   uploadProfilePhoto
 );
 
 // Update user profile
 usersRouter.put("/update-user/:userId", isAuth, updateUser);
-
-// Update user state (Active/Deactivate)
-usersRouter.put("/update-state/:userId", isAuth, updateUserState);
+usersRouter.get("/patients", isAuth, getPatientsByName);
 
 module.exports = usersRouter;

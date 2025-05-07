@@ -22,9 +22,57 @@ exports.isAuth = async (req, res, next) => {
 
 exports.isAdmin = (req, res, next) => {
   const { user } = req;
-  console.log(user);
+
+  if (!user) return sendError(res, "Unauthorized access!");
 
   if (user.roleId?.name !== "Admin")
+    return sendError(res, "Unauthorized access!");
+
+  next();
+};
+
+exports.isAdminOrSubAdmin = (req, res, next) => {
+  const { user } = req;
+
+  if (!user) return sendError(res, "Unauthorized access!");
+
+  const allowedRoles = ["Admin", "Coordinator", "Audit Manager"]; // Allow both Admin & Sub-Admin roles
+
+  if (!allowedRoles.includes(user.roleId?.name)) {
+    return sendError(res, "Unauthorized access!");
+  }
+
+  next(); // If user is Admin or Sub-Admin, proceed
+};
+
+exports.isGeneralPhysician = (req, res, next) => {
+  const { user } = req;
+
+  if (!user) return sendError(res, "Unauthorized access!");
+
+  if (user.roleId?.name !== "General Physician")
+    return sendError(res, "Unauthorized access!");
+
+  next();
+};
+
+exports.isCoordinator = (req, res, next) => {
+  const { user } = req;
+
+  if (!user) return sendError(res, "Unauthorized access!");
+
+  if (user.roleId?.name !== "Coordinator")
+    return sendError(res, "Unauthorized access!");
+
+  next();
+};
+
+exports.isPortAgent = (req, res, next) => {
+  const { user } = req;
+
+  if (!user) return sendError(res, "Unauthorized access!");
+
+  if (user.roleId?.name !== "Port Agent")
     return sendError(res, "Unauthorized access!");
 
   next();
