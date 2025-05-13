@@ -77,3 +77,14 @@ exports.isPortAgent = (req, res, next) => {
 
   next();
 };
+
+exports.isDoctor = (req, res, next) => {
+  const { user } = req;
+
+  if (!user) return sendError(res, "Unauthorized access!");
+
+  if (user.roleId?.name !== "Doctor")
+    return sendError(res, "Unauthorized access!");
+
+  next();
+};

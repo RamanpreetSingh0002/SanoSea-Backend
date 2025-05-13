@@ -8,9 +8,10 @@ const cabSchema = new mongoose.Schema(
       required: true,
     },
     portAgentId: {
+      // * Delete it later
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     cabNumber: {
       type: String,
@@ -25,11 +26,11 @@ const cabSchema = new mongoose.Schema(
       required: true,
     },
     pickupTime: {
-      type: Date,
+      type: String,
       required: true,
     },
     dropOffTime: {
-      type: Date,
+      type: String,
       required: true,
     },
     pickupLocation: {

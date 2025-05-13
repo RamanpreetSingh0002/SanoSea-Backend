@@ -3,6 +3,8 @@ const { isValidObjectId } = require("mongoose");
 
 const Role = require("../models/role.js");
 const User = require("../models/user");
+const Doctor = require("../models/doctor.js");
+
 const emailVerificationToken = require("../models/emailVerificationToken");
 const passwordResetToken = require("../models/passwordResetToken");
 const {
@@ -61,7 +63,8 @@ exports.signUp = async (req, res) => {
       const { url, public_id } = await uploadImageToCloud(
         file.path,
         newUser._id,
-        newUser.fullName
+        newUser.fullName,
+        roleName || "Patient"
       );
       newUser.profilePhoto = { url, public_id };
     }
@@ -95,7 +98,7 @@ exports.signUp = async (req, res) => {
         <h3>${OTP}</h3>
         <p>If you did not request this verification, please ignore this email.</p>
         <p>For assistance, contact our support team.</p>
-        <p>&copy; 2025 Sanosea. All rights reserved.</p>
+        <p>&copy; 2025 SanoSea. All rights reserved.</p>
       `,
     });
 
@@ -504,7 +507,7 @@ exports.uploadProfilePhoto = async (req, res) => {
     if (!file) return sendError(res, "No file uploaded!");
 
     // Find user details
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate("roleId");
     if (!user) return sendError(res, "User not found!", 404);
 
     const publicId = user?.profilePhoto?.public_id;
@@ -520,7 +523,8 @@ exports.uploadProfilePhoto = async (req, res) => {
     const { url, public_id } = await uploadImageToCloud(
       file.path,
       user._id,
-      user.fullName
+      user.fullName,
+      user.roleId.name
     );
 
     // Update user profile photo in the database
@@ -562,6 +566,7 @@ exports.updateUser = async (req, res) => {
     // Update the user details
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
+    if (!lastName) user.lastName = "";
     if (email) user.email = email;
     if (phoneNumber) user.phoneNumber = phoneNumber;
     if (officeAddress) user.officeAddress = officeAddress;
@@ -617,6 +622,36 @@ exports.getPatientsByName = async (req, res) => {
     res.status(200).json({
       message: "Patients fetched successfully!",
       patients,
+    });
+  } catch (error) {
+    sendError(res, error.message, 500);
+  }
+};
+
+exports.getDoctorsBySpeciality = async (req, res) => {
+  const { speciality } = req.query; // Extract speciality filter
+
+  try {
+    // Validate that a speciality was provided
+    if (!speciality)
+      return sendError(res, "Speciality parameter is required!", 400);
+
+    // Fetch matching doctors directly from `Doctor` model
+    const doctors = await Doctor.find({ doctorSpeciality: speciality })
+      .populate("userId", "fullName email") // Fetch user details for each doctor
+      .select("doctorSpeciality userId") // Select only relevant fields
+      .lean(); // Optimize memory usage
+
+    if (!doctors || doctors.length === 0) {
+      return res.status(200).json({
+        message: `No doctors found for speciality: ${speciality}`,
+        doctors: [],
+      });
+    }
+
+    res.status(200).json({
+      message: `Doctors retrieved successfully for speciality: ${speciality}`,
+      doctors,
     });
   } catch (error) {
     sendError(res, error.message, 500);

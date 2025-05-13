@@ -68,7 +68,8 @@ exports.create = async (req, res) => {
         const { url, public_id } = await uploadFileToCloud(
           file.path,
           newUser._id,
-          newUser.fullName
+          newUser.fullName,
+          roleName
         );
         licenseProof = { url, public_id };
       }
@@ -356,6 +357,7 @@ exports.getUserById = async (req, res) => {
     // Fetch user details by ID
     const user = await User.findById(userId)
       .populate("roleId") // Populate role details
+      .populate("doctorProfile")
       .select("-password") // Exclude password from results
       .lean(); // Reduce memory usage with `.lean()`
 
@@ -385,7 +387,11 @@ exports.deleteUser = async (req, res) => {
     const userRole = user?.roleId?.name;
 
     // Remove Entire User Folder from Cloudinary (which removes all assets)
-    const isFolderDeleted = await removeFolderFromCloud(userId, user?.fullName);
+    const isFolderDeleted = await removeFolderFromCloud(
+      userId,
+      user?.fullName,
+      user?.roleId?.name
+    );
     if (!isFolderDeleted)
       return sendError(res, "Could not remove user folder from Cloud!");
 
@@ -514,7 +520,8 @@ exports.updateUser = async (req, res) => {
       const { url, public_id } = await uploadFileToCloud(
         file.path,
         user._id,
-        user.fullName
+        user.fullName,
+        roleName
       );
       user.doctorProfile.licenseProof = { url, public_id };
 

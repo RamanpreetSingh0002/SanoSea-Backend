@@ -11,6 +11,7 @@ const {
   uploadProfilePhoto,
   updateUser,
   getPatientsByName,
+  getDoctorsBySpeciality,
 } = require("../controllers/user");
 const { uploadImage } = require("../middlewares/multer");
 const { isAuth } = require("../middlewares/auth");
@@ -68,5 +69,6 @@ usersRouter.post(
 // Update user profile
 usersRouter.put("/update-user/:userId", isAuth, updateUser);
 usersRouter.get("/patients", isAuth, getPatientsByName);
+usersRouter.get("/doctors", isAuth, getDoctorsBySpeciality);
 
 module.exports = usersRouter;

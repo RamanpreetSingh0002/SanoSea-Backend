@@ -34,7 +34,7 @@ adminRouter.get("/doctors-list", isAuth, getDoctors);
 adminRouter.get("/general-physician-list", isAuth, getGeneralPhysician);
 
 adminRouter.get("/users-by-roles", isAuth, isAdminOrSubAdmin, getUsersByRoles);
-adminRouter.get("/user/:userId", isAuth, isAdminOrSubAdmin, getUserById);
+adminRouter.get("/user/:userId", isAuth, getUserById);
 
 adminRouter.delete("/user/:userId", isAuth, isAdminOrSubAdmin, deleteUser);
 adminRouter.put(

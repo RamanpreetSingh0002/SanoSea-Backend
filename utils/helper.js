@@ -8,8 +8,11 @@ exports.sendError = (res, error, statusCode = 401) => {
 };
 
 // * uploading image to cloud
-exports.uploadImageToCloud = async (file, userId, userName) => {
-  const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`;
+exports.uploadImageToCloud = async (file, userId, userName, roleName) => {
+  const folderName = `users/${roleName}/${userId}_${userName.replace(
+    /\s+/g,
+    "_"
+  )}`;
 
   const { secure_url: url, public_id } = await cloudinary.uploader.upload(
     file,
@@ -25,9 +28,12 @@ exports.uploadImageToCloud = async (file, userId, userName) => {
 };
 
 // * uploading file to cloud
-exports.uploadFileToCloud = async (file, userId, userName) => {
+exports.uploadFileToCloud = async (file, userId, userName, roleName) => {
   // Generate a consistent folder name for the user
-  const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`;
+  const folderName = `users/${roleName}/${userId}_${userName.replace(
+    /\s+/g,
+    "_"
+  )}`;
 
   try {
     const { secure_url: url, public_id } = await cloudinary.uploader.upload(
@@ -77,9 +83,12 @@ exports.removeFileFromCloud = async publicId => {
 };
 
 // * This function deletes a folder from Cloudinary, including all its contents.
-exports.removeFolderFromCloud = async (userId, userName) => {
+exports.removeFolderFromCloud = async (userId, userName, roleName) => {
   try {
-    const folderName = `users/${userId}_${userName.replace(/\s+/g, "_")}`; // ✅ User-specific folder
+    const folderName = `users/${roleName}/${userId}_${userName.replace(
+      /\s+/g,
+      "_"
+    )}`; // User-specific folder
 
     // Step 1: Get all assets within the folder
     const { resources } = await cloudinary.api.resources({
@@ -107,7 +116,7 @@ exports.removeFolderFromCloud = async (userId, userName) => {
   }
 };
 
-// generating random byte
+// * generating random byte
 exports.generateRandomByte = () => {
   return new Promise((resolve, reject) => {
     crypto.randomBytes(30, (err, buff) => {
@@ -144,7 +153,7 @@ exports.generatePassword = () => {
     .join("");
 };
 
-// formatting user data to send to client
+// * formatting user data to send to client
 exports.formatUser = user => {
   const {
     _id,
@@ -157,6 +166,7 @@ exports.formatUser = user => {
     officeAddress,
     roleId,
     state,
+    doctorProfile,
   } = user;
   return {
     _id,
@@ -169,5 +179,6 @@ exports.formatUser = user => {
     officeAddress,
     role: roleId?.name,
     state,
+    doctorProfile,
   };
 };

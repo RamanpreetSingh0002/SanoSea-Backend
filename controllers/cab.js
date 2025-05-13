@@ -25,7 +25,6 @@ exports.addCab = async (req, res) => {
 
     const cab = new Cab({
       appointmentId,
-      portAgentId,
       cabNumber,
       driverName,
       phoneNumber,
@@ -37,8 +36,9 @@ exports.addCab = async (req, res) => {
 
     await cab.save();
 
-    // Link cab to appointment
+    // Link cab & port agent to appointment
     appointment.cabDetails = cab._id;
+    appointment.portAgentId = portAgentId;
     await appointment.save();
 
     // Fetch Patient Details
@@ -84,7 +84,7 @@ exports.addCab = async (req, res) => {
 
     res.status(201).json({
       message: "Cab details added successfully! Email sent to patient.",
-      cab,
+      appointment,
     });
   } catch (error) {
     sendError(res, error.message, 500);
