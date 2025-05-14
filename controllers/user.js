@@ -84,8 +84,8 @@ exports.signUp = async (req, res) => {
     await newEmailVerificationToken.save();
 
     // Send the OTP to the user's email
-    // const transport = mailTransporter();
-    const transport = generateMailTransporter();
+    const transport = mailTransporter();
+    // const transport = generateMailTransporter();
 
     transport.sendMail({
       from: "verification@sanosea.com",
@@ -146,8 +146,8 @@ exports.verifyEmail = async (req, res) => {
 
     await emailVerificationToken.findByIdAndDelete(token._id);
 
-    // var transport = generateMailTransporter();
-    var transport = mailTransporter();
+    var transport = generateMailTransporter();
+    // var transport = mailTransporter();
 
     // * sending welcome email to mail
     transport.sendMail({
