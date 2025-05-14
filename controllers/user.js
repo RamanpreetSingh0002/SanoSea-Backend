@@ -146,8 +146,8 @@ exports.verifyEmail = async (req, res) => {
 
     await emailVerificationToken.findByIdAndDelete(token._id);
 
-    var transport = generateMailTransporter();
-    // var transport = mailTransporter();
+    // var transport = generateMailTransporter();
+    var transport = mailTransporter();
 
     // * sending welcome email to mail
     transport.sendMail({
@@ -223,9 +223,9 @@ exports.resendEmailVerification = async (req, res) => {
     await newEmailVerificationToken.save();
 
     // * send that OTP to out user
-    // var transport = mailTransporter();
+    var transport = mailTransporter();
 
-    var transport = generateMailTransporter();
+    // var transport = generateMailTransporter();
 
     // * sending email verification OTP to mail
     transport.sendMail({
@@ -347,8 +347,8 @@ exports.resetPassword = async (req, res) => {
 
     await passwordResetToken.findByIdAndDelete(req.resetToken._id);
 
-    // const transport = generateMailTransporter();
-    var transport = mailTransporter();
+    const transport = generateMailTransporter();
+    // var transport = mailTransporter();
 
     // * sending password reset successful message to mail
     transport.sendMail({
