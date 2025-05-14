@@ -146,8 +146,8 @@ exports.verifyEmail = async (req, res) => {
 
     await emailVerificationToken.findByIdAndDelete(token._id);
 
-    var transport = generateMailTransporter();
-    // var transport = mailTransporter();
+    // var transport = generateMailTransporter();
+    var transport = mailTransporter();
 
     // * sending welcome email to mail
     transport.sendMail({
