@@ -33,7 +33,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     timeOfAppointment: {
       type: String,
-      required: false,
+      required: true,
     },
     doctorSpeciality: {
       type: String,

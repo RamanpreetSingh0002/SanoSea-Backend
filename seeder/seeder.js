@@ -43,7 +43,7 @@ const seedDatabase = async () => {
       const adminData = {
         firstName: "Super",
         lastName: "Admin",
-        // fullName: "Super Admin",
+        fullName: "Super Admin",
         phoneNumber: "1234567890",
         email: "admin@example.com",
         password: "admin@123",

@@ -7,12 +7,6 @@ const cabSchema = new mongoose.Schema(
       ref: "Appointment",
       required: true,
     },
-    portAgentId: {
-      // * Delete it later
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: false,
-    },
     cabNumber: {
       type: String,
       required: true,

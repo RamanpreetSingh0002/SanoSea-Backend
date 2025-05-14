@@ -11,17 +11,9 @@ const doctorSchema = new mongoose.Schema({
     required: true,
   },
   licenseProof: {
-    url: {
-      type: String,
-      required: false,
-    },
-    public_id: {
-      type: String,
-      required: false,
-    },
-    // url: String,
-    // public_id: String,
-    // required: false,
+    url: String,
+    public_id: String,
+    required: false,
   },
   availability: {
     days: [{ type: String, required: true }], // Example: ["Monday", "Wednesday"]
