@@ -24,6 +24,8 @@ exports.create = async (req, res) => {
   } = req.body;
   const { file } = req; // Capture uploaded file (only if Doctor)
 
+  console.log(roleName);
+
   try {
     // Validate specialty for doctors
     if (roleName === "Doctor" && !doctorSpeciality) {
