@@ -37,7 +37,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     doctorSpeciality: {
       type: String,
-      required: true,
+      required: false,
     },
     reason: {
       type: String,

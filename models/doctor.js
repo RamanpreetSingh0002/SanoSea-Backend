@@ -11,6 +11,7 @@ const doctorSchema = new mongoose.Schema({
     required: true,
   },
   licenseProof: {
+    type: Object,
     url: String,
     public_id: String,
     required: false,
