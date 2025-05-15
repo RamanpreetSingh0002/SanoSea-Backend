@@ -67,59 +67,59 @@ exports.bookAppointment = async (req, res) => {
     );
 
     // Send email notification
-    const transport = generateMailTransporter();
+    //? const transport = generateMailTransporter();
 
     // Send email to the patient
-    transport.sendMail({
-      from: "generalPhysician@sanosea.com",
-      to: patient.email,
-      subject: "Your Appointment Has Been Successfully Booked!",
-      html: `
-            <h1>Appointment Confirmation</h1>
-            <p>Dear ${patient.fullName},</p>
-            <p>Your appointment has been successfully scheduled.</p>
+    // ?transport.sendMail({
+    //   from: "generalPhysician@sanosea.com",
+    //   to: patient.email,
+    //   subject: "Your Appointment Has Been Successfully Booked!",
+    //   html: `
+    //         <h1>Appointment Confirmation</h1>
+    //         <p>Dear ${patient.fullName},</p>
+    //         <p>Your appointment has been successfully scheduled.</p>
 
-            <h3>Appointment Details:</h3>
-            <ul>
-                <li><strong>Date:</strong> ${dateOfAppointment}</li>
-                <li><strong>Doctor Specialty:</strong> ${doctorSpeciality}</li>
-                <li><strong>Reason:</strong> ${reason}</li>
-                <li><strong>Booked By:</strong> ${req.user.fullName} (General Physician)</li>
-            </ul>
+    //         <h3>Appointment Details:</h3>
+    //         <ul>
+    //             <li><strong>Date:</strong> ${dateOfAppointment}</li>
+    //             <li><strong>Doctor Specialty:</strong> ${doctorSpeciality}</li>
+    //             <li><strong>Reason:</strong> ${reason}</li>
+    //             <li><strong>Booked By:</strong> ${req.user.fullName} (General Physician)</li>
+    //         </ul>
 
-            <p>The coordinator will soon assign a doctor to your case. You will receive further updates via email.</p>
+    //         <p>The coordinator will soon assign a doctor to your case. You will receive further updates via email.</p>
 
-            <p>If you have any questions, please contact our support team.</p>
+    //         <p>If you have any questions, please contact our support team.</p>
 
-            <p>Best regards,</p>
-            <p><strong>SanoSea App Team</strong></p>
-        `,
-    });
+    //         <p>Best regards,</p>
+    //         <p><strong>SanoSea App Team</strong></p>
+    //     `,
+    // });
 
     // Send email notification to all Coordinators
-    transport.sendMail({
-      from: "generalPhysician@sanosea.com",
-      to: coordinatorEmails,
-      subject: "New Appointment Requires Doctor Assignment",
-      html: `
-          <h1>Doctor Assignment Required</h1>
-          <p>A new appointment has been booked and requires a doctor assignment.</p>
-  
-          <h3>Appointment Details:</h3>
-          <ul>
-              <li><strong>Patient Name:</strong> ${patient.fullName}</li>
-              <li><strong>Date:</strong> ${dateOfAppointment}</li>
-              <li><strong>Doctor Specialty:</strong> ${doctorSpeciality}</li>
-              <li><strong>Reason:</strong> ${reason}</li>
-              <li><strong>Booked By:</strong> ${req.user.fullName} (General Physician)</li>
-          </ul>
-  
-          <p>Please review the appointment and assign a doctor accordingly.</p>
-  
-          <p>Best regards,</p>
-          <p><strong>SanoSea Admin Team</strong></p>
-        `,
-    });
+    // ?transport.sendMail({
+    //   from: "generalPhysician@sanosea.com",
+    //   to: coordinatorEmails,
+    //   subject: "New Appointment Requires Doctor Assignment",
+    //   html: `
+    //       <h1>Doctor Assignment Required</h1>
+    //       <p>A new appointment has been booked and requires a doctor assignment.</p>
+
+    //       <h3>Appointment Details:</h3>
+    //       <ul>
+    //           <li><strong>Patient Name:</strong> ${patient.fullName}</li>
+    //           <li><strong>Date:</strong> ${dateOfAppointment}</li>
+    //           <li><strong>Doctor Specialty:</strong> ${doctorSpeciality}</li>
+    //           <li><strong>Reason:</strong> ${reason}</li>
+    //           <li><strong>Booked By:</strong> ${req.user.fullName} (General Physician)</li>
+    //       </ul>
+
+    //       <p>Please review the appointment and assign a doctor accordingly.</p>
+
+    //       <p>Best regards,</p>
+    //       <p><strong>SanoSea Admin Team</strong></p>
+    //     `,
+    // });
 
     res.status(201).json({
       message: `Appointment booked successfully! Coordinators will assign a doctor soon.`,
@@ -181,58 +181,58 @@ exports.assignDoctor = async (req, res) => {
     const portAgentEmails = portAgents.map(portAgent => portAgent.email);
 
     // Setup email transporter
-    const transport = generateMailTransporter();
+    // ?const transport = generateMailTransporter();
 
     // Send email to Assigned Doctor
-    transport.sendMail({
-      from: "coordinator@sanosea.com",
-      to: doctor.email,
-      subject: "New Appointment Assigned to You",
-      html: `
-          <h1>New Patient Appointment</h1>
-          <p>Dear Dr. ${doctor.firstName},</p>
-          <p>You have been assigned a new appointment.</p>
-  
-          <h3>Appointment Details:</h3>
-          <ul>
-              <li><strong>Patient Name:</strong> ${patient.fullName}</li>
-              <li><strong>Date:</strong> ${dateOfAppointment}</li>
-              <li><strong>Specialty Required:</strong> ${doctorSpeciality}</li>
-              <li><strong>Reason:</strong> ${reason}</li>
-              <li><strong>Booked By:</strong> Dr. ${generalPhysician.fullName} (General Physician)</li>
-          </ul>
-  
-          <p>Please review the details and prepare for the appointment.</p>
-  
-          <p>Best regards,</p>
-          <p><strong>SanoSea Admin Team</strong></p>
-        `,
-    });
+    // ?transport.sendMail({
+    //   from: "coordinator@sanosea.com",
+    //   to: doctor.email,
+    //   subject: "New Appointment Assigned to You",
+    //   html: `
+    //       <h1>New Patient Appointment</h1>
+    //       <p>Dear Dr. ${doctor.firstName},</p>
+    //       <p>You have been assigned a new appointment.</p>
+
+    //       <h3>Appointment Details:</h3>
+    //       <ul>
+    //           <li><strong>Patient Name:</strong> ${patient.fullName}</li>
+    //           <li><strong>Date:</strong> ${dateOfAppointment}</li>
+    //           <li><strong>Specialty Required:</strong> ${doctorSpeciality}</li>
+    //           <li><strong>Reason:</strong> ${reason}</li>
+    //           <li><strong>Booked By:</strong> Dr. ${generalPhysician.fullName} (General Physician)</li>
+    //       </ul>
+
+    //       <p>Please review the details and prepare for the appointment.</p>
+
+    //       <p>Best regards,</p>
+    //       <p><strong>SanoSea Admin Team</strong></p>
+    //     `,
+    // });
 
     // Send email to Port Agent for cab arrangement
-    transport.sendMail({
-      from: "coordinator@sanosea.com",
-      to: portAgentEmails,
-      subject: "Cab Assignment Required for Patient",
-      html: `
-          <h1>Cab Booking Required for Patient</h1>
-          <p>Dear Port Agent,</p>
-          <p>A patient requires transportation for their upcoming appointment. If you are available, please arrange a cab for the patient and update the system with the details.</p>
-  
-          <h3>Patient & Appointment Details:</h3>
-          <ul>
-              <li><strong>Patient Name:</strong> ${patient.fullName}</li>
-              <li><strong>Date:</strong> ${dateOfAppointment}</li>
-              <li><strong>Specialty Required:</strong> ${doctorSpeciality}</li>
-              <li><strong>Reason:</strong> ${reason}</li>
-          </ul>
-  
-          <p>Thank you for assisting in providing smooth transportation for our patients.</p>
-  
-          <p>Best regards,</p>
-          <p><strong>SanoSea Admin Team</strong></p>
-        `,
-    });
+    // ?transport.sendMail({
+    //   from: "coordinator@sanosea.com",
+    //   to: portAgentEmails,
+    //   subject: "Cab Assignment Required for Patient",
+    //   html: `
+    //       <h1>Cab Booking Required for Patient</h1>
+    //       <p>Dear Port Agent,</p>
+    //       <p>A patient requires transportation for their upcoming appointment. If you are available, please arrange a cab for the patient and update the system with the details.</p>
+
+    //       <h3>Patient & Appointment Details:</h3>
+    //       <ul>
+    //           <li><strong>Patient Name:</strong> ${patient.fullName}</li>
+    //           <li><strong>Date:</strong> ${dateOfAppointment}</li>
+    //           <li><strong>Specialty Required:</strong> ${doctorSpeciality}</li>
+    //           <li><strong>Reason:</strong> ${reason}</li>
+    //       </ul>
+
+    //       <p>Thank you for assisting in providing smooth transportation for our patients.</p>
+
+    //       <p>Best regards,</p>
+    //       <p><strong>SanoSea Admin Team</strong></p>
+    //     `,
+    // });
 
     res.status(200).json({
       message:
@@ -723,13 +723,11 @@ exports.getNewlyAssignedAppointments = async (req, res) => {
 
 // * fetch appointment counts for the logged-in doctor across a full month
 exports.getDoctorAppointmentsByMonth = async (req, res) => {
-  const { doctorId, month, year } = req.params;
-  // const doctorId = req.user._id; // Get logged-in doctor's ID
-
-  console.log(doctorId);
+  const { month, year } = req.params;
+  const doctorId = req.user._id; // Get logged-in doctor's ID
 
   try {
-    const objectDoctorId = new mongoose.Types.ObjectId(doctorId);
+    // const objectDoctorId = new mongoose.Types.ObjectId(doctorId);
 
     // Calculate start and end of month
     const startDate = new Date(year, month - 1, 1); // First day of the month
@@ -744,7 +742,7 @@ exports.getDoctorAppointmentsByMonth = async (req, res) => {
     const appointmentCounts = await Appointment.aggregate([
       {
         $match: {
-          assignedDoctorId: objectDoctorId, // Match logged-in doctor
+          assignedDoctorId: doctorId, // Match logged-in doctor
           dateOfAppointment: { $gte: startDate, $lte: endDate }, // Match selected month
         },
       },

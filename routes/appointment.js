@@ -43,8 +43,9 @@ router.get("/dashboard-stats", isAuth, fetchDashboardStats);
 router.get("/current-booking/:patientId", isAuth, getCurrentBooking);
 router.get("/newly-assigned", isAuth, isDoctor, getNewlyAssignedAppointments);
 router.get(
-  "/doctor-appointments-month/:doctorId/:month/:year",
+  "/doctor-appointments-month/:month/:year",
   isAuth,
+  isDoctor,
   getDoctorAppointmentsByMonth
 );
 
