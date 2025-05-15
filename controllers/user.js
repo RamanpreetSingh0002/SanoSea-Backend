@@ -146,23 +146,23 @@ exports.verifyEmail = async (req, res) => {
 
     await emailVerificationToken.findByIdAndDelete(token._id);
 
-    // ? var transport = generateMailTransporter();
+    var transport = generateMailTransporter();
     // var transport = mailTransporter();
 
     // * sending welcome email to mail
-    // ? transport.sendMail({
-    //   from: "verification@sanosea.com",
-    //   to: user.email,
-    //   subject: "Welcome to SanoSea App 🎉",
-    //   html: `
-    //     <h2>Welcome to SanoSea App!</h2>
-    //     <p>Dear ${user.fullName},</p>
-    //     <p>Congratulations! Your email has been successfully verified.</p>
-    //     <p>We are excited to have you on board. You can now explore all the amazing features of our platform.</p>
-    //     <p>If you have any questions, feel free to reach out to our support team.</p>
-    //     <p>Best regards,<br><strong>SanoSea App Team</strong></p>
-    //   `,
-    // });
+    transport.sendMail({
+      from: "verification@sanosea.com",
+      to: user.email,
+      subject: "Welcome to SanoSea App 🎉",
+      html: `
+        <h2>Welcome to SanoSea App!</h2>
+        <p>Dear ${user.fullName},</p>
+        <p>Congratulations! Your email has been successfully verified.</p>
+        <p>We are excited to have you on board. You can now explore all the amazing features of our platform.</p>
+        <p>If you have any questions, feel free to reach out to our support team.</p>
+        <p>Best regards,<br><strong>SanoSea App Team</strong></p>
+      `,
+    });
 
     // const htmlContent = "<h1>Welcome to our app and thanks for choosing us.</h1>";
 
@@ -223,29 +223,29 @@ exports.resendEmailVerification = async (req, res) => {
     await newEmailVerificationToken.save();
 
     // * send that OTP to out user
-    // ? var transport = generateMailTransporter();
+    var transport = generateMailTransporter();
     // var transport = mailTransporter();
 
     // * sending email verification OTP to mail
-    // ?transport.sendMail({
-    //   from: "verification@sanosea.com",
-    //   to: user.email,
-    //   subject: "Email Verification - Secure Your Account",
-    //   html: `
-    //     <h2>Email Verification Required</h2>
-    //     <p>Dear ${user.fullName},</p>
-    //     <p>To complete your registration, please use the OTP code below to verify your email:</p>
-    //     <h3>${OTP}</h3>
-    //     <p>If you did not request this verification, you can safely ignore this email.</p>
-    //     <p>For assistance, contact our support team.</p>
-    //     <p>Best regards,<br><strong>SanoSea App Team</strong></p>
-    //   `,
-    // });
+    transport.sendMail({
+      from: "verification@sanosea.com",
+      to: user.email,
+      subject: "Email Verification - Secure Your Account",
+      html: `
+        <h2>Email Verification Required</h2>
+        <p>Dear ${user.fullName},</p>
+        <p>To complete your registration, please use the OTP code below to verify your email:</p>
+        <h3>${OTP}</h3>
+        <p>If you did not request this verification, you can safely ignore this email.</p>
+        <p>For assistance, contact our support team.</p>
+        <p>Best regards,<br><strong>SanoSea App Team</strong></p>
+      `,
+    });
 
-    // const htmlContent = `
-    //   <p>Your verification OTP</p>
-    //   <h1>${OTP}</h1>
-    // `;
+    const htmlContent = `
+      <p>Your verification OTP</p>
+      <h1>${OTP}</h1>
+    `;
 
     // await sendEmail(user.name, user.email, "Email Verification", htmlContent);
 
@@ -290,23 +290,23 @@ exports.forgetPassword = async (req, res) => {
 
     // var transport = mailTransporter();
 
-    // ? const transport = generateMailTransporter();
+    const transport = generateMailTransporter();
 
     // * sending reset password link to mail
-    // ?transport.sendMail({
-    //   from: "security@sanosea.com",
-    //   to: user.email,
-    //   subject: "Reset Your Password - Secure Your Account",
-    //   html: `
-    //    <h2>Password Reset Request</h2>
-    //     <p>Dear ${user.fullName},</p>
-    //     <p>We received a request to reset your password. Click the link below to set a new password:</p>
-    //     <p><a href='${resetPasswordUrl}' style='font-size: 16px; font-weight: bold;'>Reset Password</a></p>
-    //     <p>If you did not request this reset, please ignore this email. Your account remains secure.</p>
-    //     <p>For assistance, contact our support team.</p>
-    //     <p>Best regards,<br><strong>SanoSea App Team</strong></p>
-    //   `,
-    // });
+    transport.sendMail({
+      from: "security@sanosea.com",
+      to: user.email,
+      subject: "Reset Your Password - Secure Your Account",
+      html: `
+       <h2>Password Reset Request</h2>
+        <p>Dear ${user.fullName},</p>
+        <p>We received a request to reset your password. Click the link below to set a new password:</p>
+        <p><a href='${resetPasswordUrl}' style='font-size: 16px; font-weight: bold;'>Reset Password</a></p>
+        <p>If you did not request this reset, please ignore this email. Your account remains secure.</p>
+        <p>For assistance, contact our support team.</p>
+        <p>Best regards,<br><strong>SanoSea App Team</strong></p>
+      `,
+    });
 
     // const htmlContent = `
     //   <p>Click here to reset password</p>
@@ -350,18 +350,18 @@ exports.resetPassword = async (req, res) => {
     // var transport = mailTransporter();
 
     // * sending password reset successful message to mail
-    // ?transport.sendMail({
-    //   from: "security@sanosea.com",
-    //   to: user.email,
-    //   subject: "Your Password Has Been Reset Successfully",
-    //   html: `
-    //     <h2>Password Reset Confirmation</h2>
-    //     <p>Dear ${user.fullName},</p>
-    //     <p>Your password has been successfully reset. You can now log in with your new password.</p>
-    //     <p>If you did not request this change, please contact our support team immediately.</p>
-    //     <p>Best regards,<br><strong>SanoSea App Team</strong></p>
-    //   `,
-    // });
+    transport.sendMail({
+      from: "security@sanosea.com",
+      to: user.email,
+      subject: "Your Password Has Been Reset Successfully",
+      html: `
+        <h2>Password Reset Confirmation</h2>
+        <p>Dear ${user.fullName},</p>
+        <p>Your password has been successfully reset. You can now log in with your new password.</p>
+        <p>If you did not request this change, please contact our support team immediately.</p>
+        <p>Best regards,<br><strong>SanoSea App Team</strong></p>
+      `,
+    });
 
     // const htmlContent = `
     //   <h1>Password Reset Successfully</h1>
@@ -424,19 +424,19 @@ exports.changePassword = async (req, res) => {
     await user.save();
 
     // Send confirmation email
-    // ?const transport = generateMailTransporter();
-    // ? transport.sendMail({
-    //   from: "security@sanosea.com",
-    //   to: user.email,
-    //   subject: "Your Password Has Been Changed Successfully.",
-    //   html: `
-    //     <h2>Password Change Confirmation</h2>
-    //     <p>Dear ${user.fullName},</p>
-    //     <p>Your password has been successfully updated. You can now log in with your new credentials.</p>
-    //     <p>If you did not request this change, please contact our support team immediately.</p>
-    //     <p>Best regards,<br><strong>SanoSea Security Team</strong></p>
-    //   `,
-    // });
+    const transport = generateMailTransporter();
+    transport.sendMail({
+      from: "security@sanosea.com",
+      to: user.email,
+      subject: "Your Password Has Been Changed Successfully.",
+      html: `
+        <h2>Password Change Confirmation</h2>
+        <p>Dear ${user.fullName},</p>
+        <p>Your password has been successfully updated. You can now log in with your new credentials.</p>
+        <p>If you did not request this change, please contact our support team immediately.</p>
+        <p>Best regards,<br><strong>SanoSea Security Team</strong></p>
+      `,
+    });
 
     res.json({
       message:
